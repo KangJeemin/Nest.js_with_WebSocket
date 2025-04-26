@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>NestJS 다중 방 채팅</title>
+</head>
+<body>
+  <h1>🛜 NestJS 채팅 테스트</h1>
+
+  <div>
+    <input type="text" id="roomInput" placeholder="방 이름 입력" />
+    <button onclick="joinRoom()">방 입장하기</button>
+  </div>
+
+  <div id="chatSection" style="display:none; margin-top:20px;">
+    <h2 id="currentRoom">현재 방: </h2>
+    <input type="text" id="messageInput" placeholder="메시지 입력" />
+    <button onclick="sendMessage()">전송</button>
+
+    <ul id="messages"></ul>
+  </div>
+
+  <!-- Socket.IO 라이브러리 -->
+  <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+
+  <script>
+    const socket = io('http://localhost:3000/roomchat');
+
+    let currentRoom = '';
+
+    function joinRoom() {
+      const room = document.getElementById('roomInput').value;
+      if (room.trim() === '') {
+        alert('방 이름을 입력하세요!');
+        return;
+      }
+
+      socket.emit('joinRoom', room);
+    
+      socket.on('joinedRoom', (msg) => {
+        document.getElementById('chatSection').style.display = 'block';
+        document.getElementById('currentRoom').innerText = `현재 방: ${room}`;
+        currentRoom = room;
+        alert(msg);
+      });
+    }
+
+    function sendMessage() {
+      const message = document.getElementById('messageInput').value;
+      if (message.trim() === '') {
+        alert('메시지를 입력하세요!');
+        return;
+      }
+
+      socket.emit('sendMessage', { room: currentRoom, message });
+
+      // 본인이 보낸 메시지도 화면에 표시
+      const li = document.createElement('li');
+      li.textContent = `(나) ${message}`;
+      document.getElementById('messages').appendChild(li);
+
+      document.getElementById('messageInput').value = '';
+    }
+
+    socket.on('newMessage', (msg) => {
+      const li = document.createElement('li');
+      li.textContent = msg;
+      document.getElementById('messages').appendChild(li);
+    });
+  </script>
+</body>
+</html>

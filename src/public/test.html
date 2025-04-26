@@ -14,15 +14,27 @@
     <ul id="chat"></ul>
     <ul id="notify"></ul>
     <script>
-      const socket1 = io('http://localhost:3000/message');
+
+      // 소켓 연결 시도
+      const socket1 = io('http://localhost:3000/message1');
       const socket2 = io('http://localhost:3000/alarm');
       
+      // 소켓 연결 통신 신호 기다리기
+      socket1.on('connect', () => {
+        console.log('✅ 서버 연결 성공!', socket1.id);
+      });
+      socket1.on('connect_error', (error) => {
+        console.error('❌ 서버 연결 실패:', error.message);
+        alert('서버에 연결할 수 없습니다. 다시 시도해주세요.');
+      });
 
+      // emit('message') 에 대한 응답 기다리기
       socket1.on('message', (msg) => {
         const li = document.createElement('li');
         li.innerText = msg;
         document.getElementById('chat').appendChild(li);
       });
+      // 서버로부터 페이로드 받기
       socket2.on('alarm', (msg) => {
       const li = document.createElement('li');
       li.innerText = `Received: ${msg}`;
