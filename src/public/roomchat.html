@@ -10,10 +10,11 @@
   <div>
     <input type="text" id="roomInput" placeholder="방 이름 입력" />
     <button onclick="joinRoom()">방 입장하기</button>
+    <button onclick="leaveRoom()">방 나가기</button> <!-- ✅ 방 나가기 버튼 추가 -->
   </div>
 
   <div id="chatSection" style="display:none; margin-top:20px;">
-    <h2 id="currentRoom">현재 방: </h2>
+    <h2 id="currentRoom">현재 방: 없음</h2>
     <input type="text" id="messageInput" placeholder="메시지 입력" />
     <button onclick="sendMessage()">전송</button>
 
@@ -29,44 +30,69 @@
     let currentRoom = '';
 
     function joinRoom() {
-      const room = document.getElementById('roomInput').value;
-      if (room.trim() === '') {
+      const room = document.getElementById('roomInput').value.trim();
+      if (!room) {
         alert('방 이름을 입력하세요!');
         return;
       }
 
       socket.emit('joinRoom', room);
-    
-      socket.on('joinedRoom', (msg) => {
+
+      socket.once('joinedRoom', (msg) => { // ✅ once로 변경: 중복 이벤트 등록 방지
         document.getElementById('chatSection').style.display = 'block';
         document.getElementById('currentRoom').innerText = `현재 방: ${room}`;
         currentRoom = room;
+        document.getElementById('messages').innerHTML = ''; // ✅ 입장할 때 메시지 초기화
         alert(msg);
       });
     }
 
+    function leaveRoom() {
+      if (!currentRoom) {
+        alert('현재 입장한 방이 없습니다!');
+        return;
+      }
+
+      socket.emit('leaveRoom', currentRoom);
+
+      socket.once('leftRoom', (msg) => { // ✅ 나가기 응답 처리
+        alert(msg);
+        document.getElementById('chatSection').style.display = 'none';
+        document.getElementById('currentRoom').innerText = '현재 방: 없음';
+        document.getElementById('messages').innerHTML = '';
+        currentRoom = '';
+      });
+    }
+
     function sendMessage() {
-      const message = document.getElementById('messageInput').value;
-      if (message.trim() === '') {
+      const message = document.getElementById('messageInput').value.trim();
+      if (!message) {
         alert('메시지를 입력하세요!');
+        return;
+      }
+
+      if (!currentRoom) {
+        alert('먼저 방에 입장하세요!');
         return;
       }
 
       socket.emit('sendMessage', { room: currentRoom, message });
 
-      // 본인이 보낸 메시지도 화면에 표시
-      const li = document.createElement('li');
-      li.textContent = `(나) ${message}`;
-      document.getElementById('messages').appendChild(li);
+      // 본인이 보낸 메시지도 표시
+      appendMessage(`(나) ${message}`);
 
       document.getElementById('messageInput').value = '';
     }
 
     socket.on('newMessage', (msg) => {
-      const li = document.createElement('li');
-      li.textContent = msg;
-      document.getElementById('messages').appendChild(li);
+      appendMessage(msg);
     });
+
+    function appendMessage(text) {
+      const li = document.createElement('li');
+      li.textContent = text;
+      document.getElementById('messages').appendChild(li);
+    }
   </script>
 </body>
 </html>
