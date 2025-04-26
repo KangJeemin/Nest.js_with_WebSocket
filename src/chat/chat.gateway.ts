@@ -9,17 +9,17 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
-@WebSocketGateway({ cors: true })
+@WebSocketGateway({ namespace : 'message' , cors: true })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
   handleConnection(client: Socket) {
-    console.log(`🔵 Client connected: ${client.id}`);
+    console.log(`🔵 Client Chat connected: ${client.id}`);
   }
 
   handleDisconnect(client: Socket) {
-    console.log(`🔴 Client disconnected: ${client.id}`);
+    console.log(`🔴 Client Chat disconnected: ${client.id}`);
   }
   // events messages를 구독
   @SubscribeMessage('message')

@@ -9,20 +9,36 @@
     <h1>NestJS Chat</h1>
     <input id="msg" placeholder="Type message..." />
     <button onclick="sendMsg()">Send</button>
+    <button id="trueButton">Send True</button>
+    <button id="falseButton">Send False</button>
     <ul id="chat"></ul>
-
+    <ul id="notify"></ul>
     <script>
-      const socket = io('http://localhost:3000');
+      const socket1 = io('http://localhost:3000/message');
+      const socket2 = io('http://localhost:3000/alarm');
+      
 
-      socket.on('message', (msg) => {
+      socket1.on('message', (msg) => {
         const li = document.createElement('li');
         li.innerText = msg;
         document.getElementById('chat').appendChild(li);
       });
+      socket2.on('alarm', (msg) => {
+      const li = document.createElement('li');
+      li.innerText = `Received: ${msg}`;
+      document.getElementById('notify').appendChild(li);
+    });
+      document.getElementById('trueButton').addEventListener('click', () => {
+      socket2.emit('alarm', true); // true 보내기
+    });
+
+    document.getElementById('falseButton').addEventListener('click', () => {
+      socket2.emit('alarm', false); // false 보내기
+    });
 
       function sendMsg() {
         const input = document.getElementById('msg');
-        socket.emit('message', input.value);
+        socket1.emit('message', input.value);
         input.value = '';
       }
     </script>
